@@ -1,11 +1,7 @@
 #ifndef MSC_TRANSPORT_HPP
 #define MSC_TRANSPORT_HPP
 
-#include "Consumer.hpp"
-#include "DataConsumer.hpp"
-#include "DataProducer.hpp"
 #include "Handler.hpp"
-#include "Producer.hpp"
 
 #include <json.hpp>
 #include <api/media_stream_interface.h>    // webrtc::MediaStreamTrackInterface
@@ -50,6 +46,7 @@ namespace mediasoupclient
 		nlohmann::json GetStats() const;
 		void RestartIce(const nlohmann::json& iceParameters);
 		void UpdateIceServers(const nlohmann::json& iceServers);
+        bool GetFingerprint(std::string& algorithm, std::string& fingerprint);
 
 	protected:
 		void SetHandler(Handler* handler);
@@ -72,6 +69,7 @@ namespace mediasoupclient
 		// Whether this transport supports DataChannel.
 		bool hasSctpParameters{ false };
 
+        rtc::scoped_refptr<rtc::RTCCertificate> certificate;
 	private:
 		// Listener.
 		Listener* listener{ nullptr };
@@ -87,32 +85,11 @@ namespace mediasoupclient
 		nlohmann::json appData = nlohmann::json::object();
 	};
 
-	class SendTransport : public Transport,
-	                      public Producer::PrivateListener,
-	                      public DataProducer::PrivateListener
+	class SendTransport : public Transport
 	{
-	public:
-		/* Public Listener API */
-		class Listener : public Transport::Listener
-		{
-		public:
-			virtual std::future<std::string> OnProduce(
-			  SendTransport* transport,
-			  const std::string& kind,
-			  nlohmann::json rtpParameters,
-			  const nlohmann::json& appData) = 0;
-
-			virtual std::future<std::string> OnProduceData(
-			  SendTransport* transport,
-			  const nlohmann::json& sctpStreamParameters,
-			  const std::string& label,
-			  const std::string& protocol,
-			  const nlohmann::json& appData) = 0;
-		};
-
 	private:
 		SendTransport(
-		  Listener* listener,
+          Transport::Listener* listener,
 		  const std::string& id,
 		  const nlohmann::json& iceParameters,
 		  const nlohmann::json& iceCandidates,
@@ -127,16 +104,14 @@ namespace mediasoupclient
 		friend Device;
 
 	public:
-		Producer* Produce(
-		  Producer::Listener* producerListener,
+        SendHandler::SendResult Produce(
 		  webrtc::MediaStreamTrackInterface* track,
 		  const std::vector<webrtc::RtpEncodingParameters>* encodings,
 		  const nlohmann::json* codecOptions,
 		  const nlohmann::json* codec,
 		  const nlohmann::json& appData = nlohmann::json::object());
 
-		DataProducer* ProduceData(
-		  DataProducer::Listener* listener,
+        SendHandler::SendResult ProduceData(
 		  const std::string& label      = "",
 		  const std::string& protocol   = "",
 		  bool ordered                  = true,
@@ -150,18 +125,12 @@ namespace mediasoupclient
 
 		/* Virtual methods inherited from Producer::PrivateListener. */
 	public:
-		void OnClose(Producer* producer) override;
-		void OnClose(DataProducer* dataProducer) override;
-		void OnReplaceTrack(const Producer* producer, webrtc::MediaStreamTrackInterface* track) override;
-		void OnSetMaxSpatialLayer(const Producer* producer, uint8_t maxSpatialLayer) override;
-		nlohmann::json OnGetStats(const Producer* producer) override;
+		void CloseProducer(const std::string& localId);
+		void ReplaceTrack(const std::string& localId, webrtc::MediaStreamTrackInterface* track);
+		void SetMaxSpatialLayer(const std::string& localId, uint8_t maxSpatialLayer);
+		nlohmann::json GetProducerStats(const std::string& localId);
 
 	private:
-		// Listener instance.
-		Listener* listener;
-		// Map of Producers indexed by id.
-		std::unordered_map<std::string, Producer*> producers;
-		std::unordered_map<std::string, DataProducer*> dataProducers;
 		// Whether we can produce audio/video based on computed extended RTP
 		// capabilities.
 		const std::map<std::string, bool>* canProduceByKind{ nullptr };
@@ -169,19 +138,11 @@ namespace mediasoupclient
 		std::unique_ptr<SendHandler> sendHandler;
 	};
 
-	class RecvTransport : public Transport,
-	                      public Consumer::PrivateListener,
-	                      public DataConsumer::PrivateListener
+	class RecvTransport : public Transport
 	{
-	public:
-		/* Public Listener API */
-		class Listener : public Transport::Listener
-		{
-		};
-
 	private:
 		RecvTransport(
-		  Listener* listener,
+          Transport::Listener* listener,
 		  const std::string& id,
 		  const nlohmann::json& iceParameters,
 		  const nlohmann::json& iceCandidates,
@@ -195,16 +156,14 @@ namespace mediasoupclient
 		friend Device;
 
 	public:
-		Consumer* Consume(
-		  Consumer::Listener* consumerListener,
+        RecvHandler::RecvResult Consume(
 		  const std::string& id,
 		  const std::string& producerId,
 		  const std::string& kind,
 		  nlohmann::json* rtpParameters,
 		  const nlohmann::json& appData = nlohmann::json::object());
 
-		DataConsumer* ConsumeData(
-		  DataConsumer::Listener* listener,
+        RecvHandler::RecvResult ConsumeData(
 		  const std::string& id,
 		  const std::string& producerId,
 		  const uint16_t streamId,
@@ -218,14 +177,10 @@ namespace mediasoupclient
 
 		/* Virtual methods inherited from Consumer::PrivateListener. */
 	public:
-		void OnClose(Consumer* consumer) override;
-		void OnClose(DataConsumer* consumer) override;
-		nlohmann::json OnGetStats(const Consumer* consumer) override;
+		void CloseConsumer(const std::string& localId);
+		nlohmann::json GetConsumerStats(const std::string& localId);
 
 	private:
-		// Map of Consumers indexed by id.
-		std::unordered_map<std::string, Consumer*> consumers;
-		std::unordered_map<std::string, DataConsumer*> dataConsumers;
 		// SendHandler instance.
 		std::unique_ptr<RecvHandler> recvHandler;
 	};

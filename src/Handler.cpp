@@ -79,14 +79,14 @@ namespace mediasoupclient
 
 		this->remoteSdp.reset(
 		  new Sdp::RemoteSdp(iceParameters, iceCandidates, dtlsParameters, sctpParameters));
-	};
+	}
 
 	void Handler::Close()
 	{
 		MSC_TRACE();
 
 		this->pc->Close();
-	};
+	}
 
 	json Handler::GetTransportStats()
 	{
@@ -115,7 +115,7 @@ namespace mediasoupclient
 			return;
 
 		MSC_THROW_ERROR("failed to update ICE servers");
-	};
+	}
 
 	void Handler::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState newState)
 	{
@@ -144,7 +144,7 @@ namespace mediasoupclient
 		// May throw.
 		this->privateListener->OnConnect(dtlsParameters);
 		this->transportReady = true;
-	};
+	}
 
 	/* SendHandler instance methods. */
 
@@ -165,7 +165,7 @@ namespace mediasoupclient
 		this->sendingRtpParametersByKind = sendingRtpParametersByKind;
 
 		this->sendingRemoteRtpParametersByKind = sendingRemoteRtpParametersByKind;
-	};
+	}
 
 	SendHandler::SendResult SendHandler::Send(
 	  webrtc::MediaStreamTrackInterface* track,
@@ -209,7 +209,7 @@ namespace mediasoupclient
 		if (encodings && !encodings->empty())
 			transceiverInit.send_encodings = *encodings;
 
-		webrtc::RtpTransceiverInterface* transceiver = this->pc->AddTransceiver(track, transceiverInit);
+		rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver = this->pc->AddTransceiver(rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>(track), transceiverInit);
 
 		if (!transceiver)
 			MSC_THROW_ERROR("error creating transceiver");
@@ -351,12 +351,12 @@ namespace mediasoupclient
 		this->pc->SetRemoteDescription(PeerConnection::SdpType::ANSWER, answer);
 
 		// Store in the map.
-		this->mapMidTransceiver[localId] = transceiver;
+		this->mapMidTransceiver[localId] = transceiver.release();
 
 		SendResult sendResult;
 
 		sendResult.localId       = localId;
-		sendResult.rtpSender     = transceiver->sender();
+		sendResult.rtpSender     = transceiver->sender().release();
 		sendResult.rtpParameters = sendingRtpParameters;
 
 		return sendResult;
@@ -629,7 +629,7 @@ namespace mediasoupclient
 	      privateListener, iceParameters, iceCandidates, dtlsParameters, sctpParameters, peerConnectionOptions)
 	{
 		MSC_TRACE();
-	};
+	}
 
 	RecvHandler::RecvResult RecvHandler::Receive(
 	  const std::string& id, const std::string& kind, const json* rtpParameters)
@@ -687,7 +687,7 @@ namespace mediasoupclient
 
 		auto transceivers  = this->pc->GetTransceivers();
 		auto transceiverIt = std::find_if(
-		  transceivers.begin(), transceivers.end(), [&localId](webrtc::RtpTransceiverInterface* t) {
+				       transceivers.begin(), transceivers.end(), [&localId](rtc::scoped_refptr<webrtc::RtpTransceiverInterface> t) {
 			  return t->mid() == localId;
 		  });
 
@@ -697,13 +697,13 @@ namespace mediasoupclient
 		auto& transceiver = *transceiverIt;
 
 		// Store in the map.
-		this->mapMidTransceiver[localId] = transceiver;
+		this->mapMidTransceiver[localId] = transceiver.release();
 
 		RecvResult recvResult;
 
 		recvResult.localId     = localId;
-		recvResult.rtpReceiver = transceiver->receiver();
-		recvResult.track       = transceiver->receiver()->track();
+		recvResult.rtpReceiver = transceiver->receiver().release();
+		recvResult.track       = transceiver->receiver()->track().release();
 
 		return recvResult;
 	}

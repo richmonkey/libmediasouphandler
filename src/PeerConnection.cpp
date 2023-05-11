@@ -10,6 +10,8 @@
 #include <api/video_codecs/builtin_video_decoder_factory.h>
 #include <api/video_codecs/builtin_video_encoder_factory.h>
 #include <rtc_base/ssl_adapter.h>
+#include <rtc_base/rtc_certificate_generator.h>
+#include <rtc_base/ssl_fingerprint.h>
 
 using json = nlohmann::json;
 
@@ -118,6 +120,18 @@ namespace mediasoupclient
 		this->pc->Close();
 	}
 
+    rtc::scoped_refptr<rtc::RTCCertificate> PeerConnection::GenerateCertificate() {
+        auto params = rtc::KeyParams::RSA();
+        return rtc::RTCCertificateGenerator::GenerateCertificate(params, absl::nullopt);
+    }
+
+    
+    void PeerConnection::GetFingerprint(rtc::scoped_refptr<rtc::RTCCertificate> certificate, std::string& algorithm, std::string& fingerprint) {
+        auto ssl_fingerprint = rtc::SSLFingerprint::CreateFromCertificate(*certificate);
+        fingerprint = ssl_fingerprint->GetRfc4572Fingerprint();
+        algorithm = ssl_fingerprint->algorithm;
+    }
+    
 	webrtc::PeerConnectionInterface::RTCConfiguration PeerConnection::GetConfiguration() const
 	{
 		MSC_TRACE();
@@ -199,7 +213,7 @@ namespace mediasoupclient
 			return future.get();
 		}
 
-		this->pc->SetLocalDescription(observer, sessionDescription);
+		this->pc->SetLocalDescription(observer.get(), sessionDescription);
 
 		return future.get();
 	}
@@ -229,7 +243,7 @@ namespace mediasoupclient
 			return future.get();
 		}
 
-		this->pc->SetRemoteDescription(observer, sessionDescription);
+		this->pc->SetRemoteDescription(observer.get(), sessionDescription);
 
 		return future.get();
 	}
@@ -317,11 +331,12 @@ namespace mediasoupclient
 		return this->pc->GetSenders();
 	}
 
-	bool PeerConnection::RemoveTrack(webrtc::RtpSenderInterface* sender)
+        bool PeerConnection::RemoveTrack(rtc::scoped_refptr<webrtc::RtpSenderInterface> sender)
 	{
 		MSC_TRACE();
 
-		return this->pc->RemoveTrack(sender);
+		auto r =  this->pc->RemoveTrackOrError(sender);
+		return r.ok();
 	}
 
 	json PeerConnection::GetStats()

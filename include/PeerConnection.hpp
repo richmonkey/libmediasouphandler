@@ -25,6 +25,10 @@ namespace mediasoupclient
 		  iceGatheringState2String;
 		static std::map<webrtc::PeerConnectionInterface::SignalingState, const std::string> signalingState2String;
 
+        static rtc::scoped_refptr<rtc::RTCCertificate> GenerateCertificate();
+    
+        static void GetFingerprint(rtc::scoped_refptr<rtc::RTCCertificate> certificate, std::string& algorithm, std::string& fingerprint);
+        
 	public:
 		class PrivateListener : public webrtc::PeerConnectionObserver
 		{
@@ -126,7 +130,7 @@ namespace mediasoupclient
 		  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
 		  webrtc::RtpTransceiverInit rtpTransceiverInit);
 		std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> GetSenders();
-		bool RemoveTrack(webrtc::RtpSenderInterface* sender);
+  	        bool RemoveTrack(rtc::scoped_refptr<webrtc::RtpSenderInterface> sender);
 		nlohmann::json GetStats();
 		nlohmann::json GetStats(rtc::scoped_refptr<webrtc::RtpSenderInterface> selector);
 		nlohmann::json GetStats(rtc::scoped_refptr<webrtc::RtpReceiverInterface> selector);
