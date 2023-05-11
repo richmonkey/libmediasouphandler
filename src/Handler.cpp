@@ -351,12 +351,12 @@ namespace mediasoupclient
 		this->pc->SetRemoteDescription(PeerConnection::SdpType::ANSWER, answer);
 
 		// Store in the map.
-		this->mapMidTransceiver[localId] = transceiver.release();
+		this->mapMidTransceiver[localId] = transceiver;
 
 		SendResult sendResult;
 
 		sendResult.localId       = localId;
-		sendResult.rtpSender     = transceiver->sender().release();
+		sendResult.rtpSender     = transceiver->sender();
 		sendResult.rtpParameters = sendingRtpParameters;
 
 		return sendResult;
@@ -458,7 +458,7 @@ namespace mediasoupclient
 		if (locaIdIt == this->mapMidTransceiver.end())
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
-		auto* transceiver = locaIdIt->second;
+		auto transceiver = locaIdIt->second;
 
 		transceiver->sender()->SetTrack(nullptr);
 		this->pc->RemoveTrack(transceiver->sender());
@@ -497,7 +497,7 @@ namespace mediasoupclient
 		if (localIdIt == this->mapMidTransceiver.end())
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
-		auto* transceiver = localIdIt->second;
+		auto transceiver = localIdIt->second;
 
 		transceiver->sender()->SetTrack(track);
 	}
@@ -513,7 +513,7 @@ namespace mediasoupclient
 		if (localIdIt == this->mapMidTransceiver.end())
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
-		auto* transceiver = localIdIt->second;
+		auto transceiver = localIdIt->second;
 		auto parameters   = transceiver->sender()->GetParameters();
 
 		bool hasLowEncoding{ false };
@@ -580,7 +580,7 @@ namespace mediasoupclient
 		if (localIdIt == this->mapMidTransceiver.end())
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
-		auto* transceiver = localIdIt->second;
+		auto transceiver = localIdIt->second;
 		auto stats        = this->pc->GetStats(transceiver->sender());
 
 		return stats;
@@ -697,13 +697,13 @@ namespace mediasoupclient
 		auto& transceiver = *transceiverIt;
 
 		// Store in the map.
-		this->mapMidTransceiver[localId] = transceiver.release();
+		this->mapMidTransceiver[localId] = transceiver;
 
 		RecvResult recvResult;
 
 		recvResult.localId     = localId;
-		recvResult.rtpReceiver = transceiver->receiver().release();
-		recvResult.track       = transceiver->receiver()->track().release();
+		recvResult.rtpReceiver = transceiver->receiver();
+		recvResult.track       = transceiver->receiver()->track();
 
 		return recvResult;
 	}

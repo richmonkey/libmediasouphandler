@@ -1,6 +1,8 @@
 #include "libmediasoupclient/jni/TransportJni.hpp"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/pc/rtp_parameters.h"
+#include "sdk/android/src/jni/pc/rtp_sender.h"
+#include "sdk/android/src/jni/pc/rtp_receiver.h"
 #include "libmediasoupclient/include/Device.hpp"
 #include "libmediasoupclient/include/Transport.hpp"
 #include "libmediasoupclient/jni/jni_helper.hpp"
@@ -13,6 +15,30 @@ static jlong getNativeTrack(JNIEnv *env, jobject j_track) {
     return nativeTrack;
 }
 
+static jobject Java_Fingerprint_Constructor(JNIEnv *env, jstring algo, jstring fingerprint) {
+    jclass cls = env->FindClass("org/mediasoup/Fingerprint");
+    auto constructor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+    auto object = env->NewObject(cls, constructor, algo, fingerprint);
+    return object;
+}
+
+static jobject Java_SendTransport_SendResult_Constructor(JNIEnv* env, jstring localId, jobject rtpSender, jstring rtpParameters) {
+    jclass cls = env->FindClass("org/mediasoup/SendTransport$SendResult");
+    auto constructor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;Lorg/webrtc/RtpSender;Ljava/lang/String;)V");
+    auto object = env->NewObject(cls, constructor, localId, rtpSender, rtpParameters);
+    return object;
+}
+
+static jobject Java_RecvTransport_RecvResult_Constructor(JNIEnv* env, jstring localId, jobject rtpReceiver, jlong nativeTrack) {
+    jclass cls = env->FindClass("org/mediasoup/Recvransport$RecvResult");
+    auto constructor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;Lorg/webrtc/RtpReceiver;Lorg/webrtc/MediaStreamTrack;)V");
+    auto object = env->NewObject(cls, constructor, localId, rtpReceiver, nativeTrack);
+    return object;
+}
+
+// static jobject createMediaStreamTrack(JNIEnv* env, jlong nativeTrack) {
+//     jclass cls = env->FindClass("org/mediasoup/Recvransport$RecvResult");
+// }
 
 //Transport
 // JOWW(void, Transport_nativeClose)(JNIEnv *env, jlong nativeTransport) {
@@ -53,6 +79,17 @@ JOWW(jstring, Transport_nativeGetStats)(JNIEnv *env, jobject object,
     return result.Release();
 }    
 
+JOWW(jobject, Transport_nativeGetFingerprint)(JNIEnv *env, jobject object,
+                                     jlong nativeTransport) {
+    mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
+    std::string alg, fingerprint;
+
+    transport->GetFingerprint(alg, fingerprint);
+
+    auto j_alg = webrtc::NativeToJavaString(env, alg);
+    auto j_fingerprint = webrtc::NativeToJavaString(env, fingerprint);
+    return Java_Fingerprint_Constructor(env, j_alg.Release(), j_fingerprint.Release());
+}
     
 JOWW(jboolean, Transport_nativeIsClosed)(JNIEnv *env, jobject object,
                                         jlong nativeTransport) {
@@ -61,7 +98,6 @@ JOWW(jboolean, Transport_nativeIsClosed)(JNIEnv *env, jobject object,
     auto closed = transport->IsClosed();
     return closed ? JNI_TRUE : JNI_FALSE;
 } 
-
 
 JOWW(void, Transport_nativeClose)(JNIEnv *env, jobject object,
                                   jlong nativeTransport) {
@@ -108,7 +144,7 @@ JOWW(void, Transport_nativeUpdateIceServers)(JNIEnv *env, jobject object,
 //     return webrtc::NativeToJavaPointer(new ProducerJni(producer, listener));
 // }
 
-JOWW(void, SendTransport_nativeProduce)(
+JOWW(jobject, SendTransport_nativeProduce)(
     JNIEnv *env, 
     jlong nativeTransport, 
     jobject j_track, 
@@ -120,40 +156,45 @@ JOWW(void, SendTransport_nativeProduce)(
     webrtc::MediaStreamTrackInterface *track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(nativeTrack);
     auto encodings = webrtc::JavaListToNativeVector<webrtc::RtpEncodingParameters, jobject>(env, webrtc::JavaParamRef<jobject>(j_encodings), 
         &webrtc::jni::JavaToNativeRtpEncodingParameters);
-    auto s_codecOptions = webrtc::JavaToStdString(env, j_codecOptions);
-    auto s_codec = webrtc::JavaToStdString(env, j_codec);
+    auto s_codecOptions = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codecOptions));
+    auto s_codec = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codec));
     auto codecOptions = nlohmann::json::parse(s_codecOptions);
     auto codec = nlohmann::json::parse(s_codec);
 
-
-    transport->Produce(track, &encodings, &codecOptions, &codec);
+    auto sendResult = transport->Produce(track, &encodings, &codecOptions, &codec);
+    auto localId = webrtc::NativeToJavaString(env, sendResult.localId);
+    auto rtpParameters = webrtc::NativeToJavaString(env, sendResult.rtpParameters.dump());
+    auto rtpSender = webrtc::jni::NativeToJavaRtpSender(env, sendResult.rtpSender);
+    return Java_SendTransport_SendResult_Constructor(env, localId.Release(), rtpSender.Release(), rtpParameters.Release());
 }
 
 
     
     
 //RecvTransport
-// JOWW(jlong, RecvTransport_nativeConsume)(JNIEnv *env, jobject object,
-//                                         jlong nativeTransport,
-//                                         jobject j_consumer,
-//                                         jobject j_listener,
-//                                         jstring j_id,
-//                                         jstring j_producerId,
-//                                         jstring j_kind,
-//                                         jstring j_rtpParameters,
-//                                         jstring j_appData) {
-//     TransportJni *jni_transport = reinterpret_cast<TransportJni*>(nativeTransport);
+JOWW(jobject, RecvTransport_nativeConsume)(JNIEnv *env,
+                                        jlong nativeTransport,
+                                        jstring j_id,
+                                        jstring j_producerId,
+                                        jstring j_kind,
+                                        jstring j_rtpParameters) {
+    mediasoupclient::RecvTransport* transport = reinterpret_cast<mediasoupclient::RecvTransport*>(nativeTransport);
 
-//     ConsumerListenerJni *listener = new ConsumerListenerJni(env, j_listener, j_consumer);
-//     auto id = webrtc::JavaToStdString(env, j_id);
-//     auto producerId = webrtc::JavaToStdString(env, j_producerId);
-//     auto kind = webrtc::JavaToStdString(env, j_kind);
-//     auto s_rtpParameters = webrtc::JavaToStdString(env, j_rtpParameters);
-//     auto rtpParameters = nlohmann::json::parse(s_rtpParameters);
-//     auto consumer =  jni_transport->recv_transport->Consume(listener, id, producerId, kind, &rtpParameters);
 
-//     return webrtc::NativeToJavaPointer(new ConsumerJni(consumer, listener));
-// }
+    auto id = webrtc::JavaToStdString(env, j_id);
+    auto producerId = webrtc::JavaToStdString(env, j_producerId);
+    auto kind = webrtc::JavaToStdString(env, j_kind);
+    auto s_rtpParameters = webrtc::JavaToStdString(env, j_rtpParameters);
+    auto rtpParameters = nlohmann::json::parse(s_rtpParameters);
+    auto recvResult = transport->Consume(id, producerId, kind, &rtpParameters);
+
+    auto localId = webrtc::NativeToJavaString(env, recvResult.localId);
+    auto rtpReceiver = webrtc::jni::NativeToJavaRtpReceiver(env, recvResult.rtpReceiver);
+    auto track = recvResult.track;
+    jlong nativeTrack = webrtc::NativeToJavaPointer(track.release());
+
+    return Java_RecvTransport_RecvResult_Constructor(env, localId.Release(), rtpReceiver.Release(), nativeTrack);
+}
 
 
 
