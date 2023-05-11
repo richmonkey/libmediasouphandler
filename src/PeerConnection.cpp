@@ -436,7 +436,7 @@ namespace mediasoupclient
 		auto message = std::string(error.message());
 
 		this->Reject(message);
-	};
+	}
 
 	/* CreateSessionDescriptionObserver */
 
@@ -503,7 +503,7 @@ namespace mediasoupclient
 			this->promise.set_value(json::array());
 		else
 			this->promise.set_value(json::parse(s));
-	};
+	}
 
 	/* PeerConnection::PrivateListener */
 

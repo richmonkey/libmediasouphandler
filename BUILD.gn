@@ -13,6 +13,7 @@ rtc_library("mediasoupclient") {
   ]
 
   sources = [
+        "src/Transport.cpp",
         "src/Device.cpp",
         "src/Handler.cpp",
         "src/Logger.cpp",
@@ -97,7 +98,9 @@ if (is_android) {
  
        sources = [
          "jni/mediasoupclient.cpp",
-         #"jni/Device.cpp",
+         "jni/Device.cpp",
+         "jni/TransportJni.cpp",
+         "jni/TransportJni.hpp",
          "jni/jni_helper.cpp",
          "jni/jni_helper.hpp",
          #"jni/Callback.hpp",

@@ -25,6 +25,7 @@ namespace mediasoupclient
 		class Listener
 		{
 		public:
+            virtual ~Listener() {}
 			virtual std::future<void> OnConnect(Transport* transport, const nlohmann::json& dtlsParameters) = 0;
 			virtual void OnConnectionStateChange(Transport* transport, const std::string& connectionState) = 0;
 		};
@@ -32,12 +33,13 @@ namespace mediasoupclient
 		/* Only child classes will create transport intances */
 	protected:
 		Transport(
-		  Listener* listener,
+		  Transport::Listener* listener,
 		  const std::string& id,
 		  const nlohmann::json* extendedRtpCapabilities,
 		  const nlohmann::json& appData);
 
 	public:
+        virtual ~Transport() {}
 		const std::string& GetId() const;
 		bool IsClosed() const;
 		const std::string& GetConnectionState() const;
@@ -47,6 +49,7 @@ namespace mediasoupclient
 		void RestartIce(const nlohmann::json& iceParameters);
 		void UpdateIceServers(const nlohmann::json& iceServers);
         bool GetFingerprint(std::string& algorithm, std::string& fingerprint);
+        Listener* GetListener();
 
 	protected:
 		void SetHandler(Handler* handler);
@@ -111,7 +114,7 @@ namespace mediasoupclient
 		  const nlohmann::json* codec,
 		  const nlohmann::json& appData = nlohmann::json::object());
 
-        SendHandler::SendResult ProduceData(
+        Handler::DataChannel ProduceData(
 		  const std::string& label      = "",
 		  const std::string& protocol   = "",
 		  bool ordered                  = true,
@@ -163,7 +166,7 @@ namespace mediasoupclient
 		  nlohmann::json* rtpParameters,
 		  const nlohmann::json& appData = nlohmann::json::object());
 
-        RecvHandler::RecvResult ConsumeData(
+        Handler::DataChannel ConsumeData(
 		  const std::string& id,
 		  const std::string& producerId,
 		  const uint16_t streamId,

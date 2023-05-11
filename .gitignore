@@ -6,3 +6,4 @@ compile_commands.json
 # Vim temporal files.
 *.swp
 *.swo
+*~

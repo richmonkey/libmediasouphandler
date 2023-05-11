@@ -65,6 +65,7 @@ namespace mediasoupclient
 		class LogHandlerInterface
 		{
 		public:
+            virtual ~LogHandlerInterface() {}
 			virtual void OnLog(LogLevel level, char* payload, size_t len) = 0;
 		};
 
