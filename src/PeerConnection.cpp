@@ -121,7 +121,7 @@ namespace mediasoupclient
 	}
 
     rtc::scoped_refptr<rtc::RTCCertificate> PeerConnection::GenerateCertificate() {
-        auto params = rtc::KeyParams::RSA();
+        auto params = rtc::KeyParams::ECDSA();
         return rtc::RTCCertificateGenerator::GenerateCertificate(params, absl::nullopt);
     }
 
@@ -152,7 +152,7 @@ namespace mediasoupclient
 
 		MSC_WARN(
 		  "webrtc::PeerConnection::SetConfiguration failed [%s:%s]",
-		  webrtc::ToString(error.type()),
+		  webrtc::ToString(error.type()).data(),
 		  error.message());
 
 		return false;
@@ -422,7 +422,7 @@ namespace mediasoupclient
 		MSC_TRACE();
 
 		this->promise.set_value();
-	};
+	}
 
 	void PeerConnection::SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
 	{
@@ -430,7 +430,7 @@ namespace mediasoupclient
 
 		MSC_WARN(
 		  "webtc::SetSessionDescriptionObserver failure [%s:%s]",
-		  webrtc::ToString(error.type()),
+		  webrtc::ToString(error.type()).data(),
 		  error.message());
 
 		auto message = std::string(error.message());
@@ -466,7 +466,7 @@ namespace mediasoupclient
 
 		ownedDesc->ToString(&sdp);
 		this->promise.set_value(sdp);
-	};
+	}
 
 	void PeerConnection::CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
 	{
@@ -474,7 +474,7 @@ namespace mediasoupclient
 
 		MSC_WARN(
 		  "webtc::CreateSessionDescriptionObserver failure [%s:%s]",
-		  webrtc::ToString(error.type()),
+		  webrtc::ToString(error.type()).data(),
 		  error.message());
 
 		auto message = std::string(error.message());

@@ -13,15 +13,15 @@
 #include "libmediasoupclient/jni/TransportJni.hpp"
 #include <json.hpp>
 
-static jlong getNativeFactory(JNIEnv *env, jobject j_factory) {
-    jclass cls = env->GetObjectClass(j_factory);
-    jfieldID field = env->GetFieldID(cls, "nativeFactory", "J");
-    return env->GetLongField(j_factory, field);
-}
+// static jlong getNativeFactory(JNIEnv *env, jobject j_factory) {
+//     jclass cls = env->GetObjectClass(j_factory);
+//     jfieldID field = env->GetFieldID(cls, "nativeFactory", "J");
+//     return env->GetLongField(j_factory, field);
+// }
 
-static webrtc::PeerConnectionFactoryInterface* PeerConnectionFactoryFromJava(jlong j_p) {
-    return reinterpret_cast<webrtc::jni::OwnedFactoryAndThreads*>(j_p)->factory();
-}
+// static webrtc::PeerConnectionFactoryInterface* PeerConnectionFactoryFromJava(jlong j_p) {
+//     return reinterpret_cast<webrtc::jni::OwnedFactoryAndThreads*>(j_p)->factory();
+// }
 
 static jobject Java_SendTransport_Constructor(JNIEnv *env, jlong nativeTransport) {
     jclass cls = env->FindClass("org/mediasoup/SendTransport");
@@ -38,30 +38,27 @@ static jobject Java_RecvTransport_Constructor(JNIEnv *env, jlong nativeTransport
 }
 
 
-JOWW(jlong, Device_nativeCreateDevice)(JNIEnv *env, jobject object) {
+JOWW(jlong, Device_nativeCreateDevice)(JNIEnv *env, jclass cls) {
+    LOG("Device native create device");
     mediasoupclient::Device *device = new mediasoupclient::Device();
     return webrtc::NativeToJavaPointer(device);
 }
 
 JOWW(void, Device_nativeLoad)(JNIEnv *env,
-                              jobject object,
+                              jclass cls,
                               jlong nativeDevice,
-                              jstring routerRtpCapabilities,
+                              jstring j_routerRtpCapabilities,
                               jobject rtcConfig,
-                              jobject j_factory) {
-    LOG("test");
-    const webrtc::JavaParamRef<jobject>& j_rtc_config = webrtc::JavaParamRef<jobject>(env, rtcConfig);
-    
+                              jlong nativeFactory) {
+    LOG("Device native load");
+    auto s_routerRtpCapabilities = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(env, j_routerRtpCapabilities));
+    auto routerRtpCapabilities = nlohmann::json::parse(s_routerRtpCapabilities);
+
+    const webrtc::JavaParamRef<jobject> j_rtc_config(env, rtcConfig);
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
-    
     webrtc::jni::JavaToNativeRTCConfiguration(env, j_rtc_config, &rtc_config);
 
-    const char *router_rtpcap = env->GetStringUTFChars(routerRtpCapabilities, NULL);
-
-    auto cap = nlohmann::json::parse(router_rtpcap);
-
-    jlong factory = getNativeFactory(env, j_factory);
-    webrtc::PeerConnectionFactoryInterface *factory_interface = PeerConnectionFactoryFromJava(factory);
+    webrtc::PeerConnectionFactoryInterface *factory_interface = reinterpret_cast<webrtc::PeerConnectionFactoryInterface*>(nativeFactory);
     
     mediasoupclient::PeerConnection::Options options;
     options.config = rtc_config;
@@ -69,14 +66,11 @@ JOWW(void, Device_nativeLoad)(JNIEnv *env,
 
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);
 
-    device->Load(cap, &options);
-    
-    env->ReleaseStringUTFChars(routerRtpCapabilities, router_rtpcap);
+    device->Load(routerRtpCapabilities, &options);
 }
 
 
-
-JOWW(jboolean, Device_nativeIsLoaded)(JNIEnv *env, jobject object,
+JOWW(jboolean, Device_nativeIsLoaded)(JNIEnv *env, jclass cls,
                                       jlong nativeDevice) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);    
     return device->IsLoaded() ? JNI_TRUE : JNI_FALSE;
@@ -84,16 +78,13 @@ JOWW(jboolean, Device_nativeIsLoaded)(JNIEnv *env, jobject object,
 
 
 
-JOWW(void, Device_nativeRelease)(JNIEnv *env, jobject object,
-                                      jlong nativeDevice) {
+JOWW(void, Device_nativeRelease)(JNIEnv *env, jclass cls, jlong nativeDevice) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);    
     delete device;
 }
 
 
-
-JOWW(jstring, Device_nativeGetRtpCapabilities)(JNIEnv *env, jobject object,
-                                      jlong nativeDevice) {
+JOWW(jstring, Device_nativeGetRtpCapabilities)(JNIEnv *env, jclass cls, jlong nativeDevice) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);    
     auto rtpCap = device->GetRtpCapabilities();
     auto s_rtpCap = rtpCap.dump();
@@ -102,8 +93,16 @@ JOWW(jstring, Device_nativeGetRtpCapabilities)(JNIEnv *env, jobject object,
 }
 
 
+JOWW(jstring, Device_nativeGetSctpCapabilities)(JNIEnv *env, jclass cls, jlong nativeDevice) {
+    mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);    
+    auto sctpCap = device->GetSctpCapabilities();
+    auto s_sctpCap = sctpCap.dump();
+    auto result = webrtc::NativeToJavaString(env, s_sctpCap);
+    return result.Release();
+}
 
-JOWW(jboolean, Device_nativeCanProduce)(JNIEnv *env, jobject object,
+
+JOWW(jboolean, Device_nativeCanProduce)(JNIEnv *env, jclass cls,
                                        jlong nativeDevice, jstring kind) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);
 
@@ -115,14 +114,15 @@ JOWW(jboolean, Device_nativeCanProduce)(JNIEnv *env, jobject object,
 }
 
 
-JOWW(jobject, Device_nativeCreateSendTransport)(JNIEnv *env, jobject object,
+JOWW(jobject, Device_nativeCreateSendTransport)(JNIEnv *env, 
+                                              jclass cls,
                                               jlong nativeDevice,
-                                              jobject j_transport,
-                                              jobject j_listener,
                                               jstring j_id,
                                               jstring j_iceParameters,
                                               jstring j_iceCandidates,
-                                              jstring j_dtlsParameters) {
+                                              jstring j_dtlsParameters,
+                                              jobject rtcConfig,
+                                              jlong nativeFactory) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);
     auto id = webrtc::JavaToStdString(env, j_id);
     auto s_iceParameters = webrtc::JavaToStdString(env, j_iceParameters);
@@ -132,6 +132,16 @@ JOWW(jobject, Device_nativeCreateSendTransport)(JNIEnv *env, jobject object,
     auto iceParameters = nlohmann::json::parse(s_iceParameters);
     auto iceCandidates = nlohmann::json::parse(s_iceCandidates);
     auto dtlsParameters = nlohmann::json::parse(s_dtlsParameters);
+
+    const webrtc::JavaParamRef<jobject> j_rtc_config(env, rtcConfig);
+    webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
+    webrtc::jni::JavaToNativeRTCConfiguration(env, j_rtc_config, &rtc_config);
+
+    webrtc::PeerConnectionFactoryInterface *factory_interface = reinterpret_cast<webrtc::PeerConnectionFactoryInterface*>(nativeFactory);
+    
+    mediasoupclient::PeerConnection::Options options;
+    options.config = rtc_config;
+    options.factory = factory_interface;
 
     auto listener = new TransportObserverJni();
 
@@ -140,19 +150,21 @@ JOWW(jobject, Device_nativeCreateSendTransport)(JNIEnv *env, jobject object,
       id,
       iceParameters,
       iceCandidates,
-      dtlsParameters);
+      dtlsParameters,
+      &options);
     
     return Java_SendTransport_Constructor(env, webrtc::NativeToJavaPointer(transport));
 }
 
-JOWW(jobject, Device_nativeCreateRecvTransport)(JNIEnv *env, jobject object,
+JOWW(jobject, Device_nativeCreateRecvTransport)(JNIEnv *env,
+                                              jclass cls,
                                               jlong nativeDevice,
-                                              jobject j_transport,
-                                              jobject j_listener,
                                               jstring j_id,
                                               jstring j_iceParameters,
                                               jstring j_iceCandidates,
-                                              jstring j_dtlsParameters) {
+                                              jstring j_dtlsParameters,
+                                              jobject rtcConfig,
+                                              jlong nativeFactory) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);
     auto id = webrtc::JavaToStdString(env, j_id);
     auto s_iceParameters = webrtc::JavaToStdString(env, j_iceParameters);
@@ -163,6 +175,16 @@ JOWW(jobject, Device_nativeCreateRecvTransport)(JNIEnv *env, jobject object,
     auto iceCandidates = nlohmann::json::parse(s_iceCandidates);
     auto dtlsParameters = nlohmann::json::parse(s_dtlsParameters);
 
+    const webrtc::JavaParamRef<jobject> j_rtc_config(env, rtcConfig);
+    webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
+    webrtc::jni::JavaToNativeRTCConfiguration(env, j_rtc_config, &rtc_config);
+
+    webrtc::PeerConnectionFactoryInterface *factory_interface = reinterpret_cast<webrtc::PeerConnectionFactoryInterface*>(nativeFactory);
+    
+    mediasoupclient::PeerConnection::Options options;
+    options.config = rtc_config;
+    options.factory = factory_interface;
+
     auto listener = new TransportObserverJni();
 
     auto transport = device->CreateRecvTransport(
@@ -170,7 +192,8 @@ JOWW(jobject, Device_nativeCreateRecvTransport)(JNIEnv *env, jobject object,
         id,
         iceParameters,
         iceCandidates,
-        dtlsParameters);
+        dtlsParameters,
+        &options);
 
     return Java_RecvTransport_Constructor(env, webrtc::NativeToJavaPointer(transport));
 }

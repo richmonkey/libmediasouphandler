@@ -23,12 +23,12 @@
 
 
 JOWW(void, MediaSoupClient_initialize)(JNIEnv *env, jobject object) {
-    mediasoupclient::Initialize();
+
 }
 
 
 JOWW(void, MediaSoupClient_cleanup)(JNIEnv *env, jobject object) {
-    mediasoupclient::Cleanup();    
+ 
 }
 
 

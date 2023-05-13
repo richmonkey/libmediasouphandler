@@ -79,9 +79,7 @@ if (is_android) {
           "java/org/mediasoup/Transport.java",
           "java/org/mediasoup/SendTransport.java",
           "java/org/mediasoup/RecvTransport.java",
-          "java/org/mediasoup/Producer.java",
-          "java/org/mediasoup/Consumer.java",
-          "java/org/mediasoup/Callback.java",
+          "java/org/mediasoup/Fingerprint.java",
         ]
      
         deps = [

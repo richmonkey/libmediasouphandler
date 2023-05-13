@@ -40,11 +40,12 @@ namespace mediasoupclient
 
 	public:
         virtual ~Transport() {}
+   		virtual void Close();
+        
 		const std::string& GetId() const;
 		bool IsClosed() const;
 		const std::string& GetConnectionState() const;
 		nlohmann::json& GetAppData();
-		virtual void Close();
 		nlohmann::json GetStats() const;
 		void RestartIce(const nlohmann::json& iceParameters);
 		void UpdateIceServers(const nlohmann::json& iceServers);

@@ -1,3 +1,5 @@
+package org.mediasoup;
+
 public class Fingerprint {
     public String algorithm;
     public String fingerprint;
