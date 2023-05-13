@@ -52,7 +52,7 @@ static jobject Java_RecvTransport_RecvResult_Constructor(JNIEnv* env, jstring lo
 // }
 
     
-JOWW(jstring, Transport_nativeGetId)(JNIEnv *env, jobject object,
+JOWW(jstring, Transport_nativeGetId)(JNIEnv *env, jclass cls,
                                      jlong nativeTransport) {
     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
     std::string id = transport->GetId();
@@ -60,7 +60,7 @@ JOWW(jstring, Transport_nativeGetId)(JNIEnv *env, jobject object,
     return result.Release();
 }
 
-JOWW(jstring, Transport_nativeGetConnectionState)(JNIEnv *env, jobject object,
+JOWW(jstring, Transport_nativeGetConnectionState)(JNIEnv *env, jclass cls,
                                                   jlong nativeTransport) {
 
     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
@@ -70,7 +70,7 @@ JOWW(jstring, Transport_nativeGetConnectionState)(JNIEnv *env, jobject object,
     return result.Release();    
 }
 
-JOWW(jstring, Transport_nativeGetStats)(JNIEnv *env, jobject object,
+JOWW(jstring, Transport_nativeGetStats)(JNIEnv *env, jclass cls,
                                      jlong nativeTransport) {
     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
     auto stats = transport->GetStats();
@@ -79,7 +79,7 @@ JOWW(jstring, Transport_nativeGetStats)(JNIEnv *env, jobject object,
     return result.Release();
 }    
 
-JOWW(jobject, Transport_nativeGetFingerprint)(JNIEnv *env, jobject object,
+JOWW(jobject, Transport_nativeGetFingerprint)(JNIEnv *env, jclass cls,
                                      jlong nativeTransport) {
     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
     std::string alg, fingerprint;
@@ -91,7 +91,7 @@ JOWW(jobject, Transport_nativeGetFingerprint)(JNIEnv *env, jobject object,
     return Java_Fingerprint_Constructor(env, j_alg.Release(), j_fingerprint.Release());
 }
     
-JOWW(jboolean, Transport_nativeIsClosed)(JNIEnv *env, jobject object,
+JOWW(jboolean, Transport_nativeIsClosed)(JNIEnv *env, jclass cls,
                                         jlong nativeTransport) {
 
     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
@@ -107,15 +107,23 @@ JOWW(void, Transport_nativeClose)(JNIEnv *env, jobject object,
     delete transport;
 }
 
-JOWW(void, Transport_nativeRestartIce)(JNIEnv *env, jobject object,
+JOWW(void, Transport_nativeRestartIce)(JNIEnv *env, jclass cls,
                                        jlong nativeTransport,
-                                       jstring iceParameters) {
+                                       jstring j_iceParameters) {
+    mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
+    auto s_iceParameters = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_iceParameters));
+    auto iceParameters = nlohmann::json::parse(s_iceParameters);
+    transport->RestartIce(iceParameters);
 }     
 
 
-JOWW(void, Transport_nativeUpdateIceServers)(JNIEnv *env, jobject object,
+JOWW(void, Transport_nativeUpdateIceServers)(JNIEnv *env, jclass cls,
                                             jlong nativeTransport,
-                                            jstring iceServers) {
+                                            jstring j_iceServers) {
+    mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
+    auto s_iceServers = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_iceServers));
+    auto iceServers = nlohmann::json::parse(s_iceServers);
+    transport->UpdateIceServers(iceServers);                                                
 }
 
 
@@ -146,6 +154,7 @@ JOWW(void, Transport_nativeUpdateIceServers)(JNIEnv *env, jobject object,
 
 JOWW(jobject, SendTransport_nativeProduce)(
     JNIEnv *env, 
+    jclass cls,
     jlong nativeTransport, 
     jobject j_track, 
     jobject j_encodings, 
@@ -173,6 +182,7 @@ JOWW(jobject, SendTransport_nativeProduce)(
     
 //RecvTransport
 JOWW(jobject, RecvTransport_nativeConsume)(JNIEnv *env,
+                                        jclass cls,
                                         jlong nativeTransport,
                                         jstring j_id,
                                         jstring j_producerId,
