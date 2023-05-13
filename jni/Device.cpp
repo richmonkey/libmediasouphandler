@@ -106,7 +106,7 @@ JOWW(jboolean, Device_nativeCanProduce)(JNIEnv *env, jclass cls,
                                        jlong nativeDevice, jstring kind) {
     mediasoupclient::Device *device = reinterpret_cast<mediasoupclient::Device*>(nativeDevice);
 
-    auto k = webrtc::JavaToStdString(env, kind);
+    auto k = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(kind));
     
     auto result = device->CanProduce(k);
 

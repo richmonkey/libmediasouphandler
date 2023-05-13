@@ -21,6 +21,15 @@ public class SendTransport extends Transport {
     }
     
     public SendResult produce(MediaStreamTrack track, RtpParameters.Encoding[] encodings, String codecOptions, String codec) {
+        if (encodings == null) {
+            encodings = new RtpParameters.Encoding[0];
+        }
+        if (codecOptions == null) {
+            codecOptions = "{}";
+        }
+        if (codec == null) {
+            codec = "{}";
+        }
         SendResult sendResult = nativeProduce(nativeTransport, track, encodings, codecOptions, codec);
         return sendResult;
     }

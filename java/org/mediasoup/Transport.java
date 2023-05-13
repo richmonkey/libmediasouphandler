@@ -7,6 +7,10 @@ public class Transport {
         nativeTransport = transport;
     }
 
+    public String getId() {
+        return nativeGetId(nativeTransport);
+    }
+    
     public void close() {
         if (nativeTransport != 0) {
             nativeClose(nativeTransport);
@@ -22,6 +26,7 @@ public class Transport {
         return nativeGetFingerprint(nativeTransport);
     }
 
+    private static native String nativeGetId(long nativeTransport);
     private static native void nativeClose(long nativeTransport);
     private static native boolean nativeIsClosed(long nativeTransport);        
     private static native Fingerprint nativeGetFingerprint(long nativeTransport);

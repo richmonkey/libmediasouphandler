@@ -1,0 +1,28 @@
+import("../../../webrtc.gni")
+
+
+group("libsdptransform") {
+  public_deps = [
+       ":sdptransform",
+    ]
+}
+
+rtc_library("sdptransform") {
+  visibility = [
+    "*",
+  ]
+
+  sources = [
+    "src/grammar.cpp",
+    "src/parser.cpp",
+    "src/writer.cpp",
+    "include/sdptransform.hpp",
+    "include/json.hpp",
+  ]
+
+  include_dirs = [ "include" ]
+  deps = [
+   
+  ]
+  suppressed_configs += [ "//build/config/compiler:no_exceptions" ]    
+}

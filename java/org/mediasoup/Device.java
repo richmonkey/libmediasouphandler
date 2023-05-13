@@ -31,6 +31,10 @@ public class Device {
         }
     }
 
+    public boolean canProduce(String kind) {
+        return nativeCanProduce(nativeDevice, kind);
+    }
+
     public String getRtpCapabilities() {
         return nativeGetRtpCapabilities(nativeDevice);
     }
@@ -66,6 +70,7 @@ public class Device {
     private static native boolean nativeIsLoaded(long nativeDevice);
     private static native void nativeRelease(long nativeDevice);
 
+    private static native boolean nativeCanProduce(long nativeDevice, String kind);
     private static native String nativeGetRtpCapabilities(long nativeDevice);
     private static native String nativeGetSctpCapabilities(long nativeDevice);
 
