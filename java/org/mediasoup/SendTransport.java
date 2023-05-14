@@ -1,4 +1,7 @@
 package org.mediasoup;
+
+import java.util.List;
+import java.util.ArrayList;
 import org.webrtc.RtpParameters;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.RtpSender;
@@ -20,9 +23,9 @@ public class SendTransport extends Transport {
         super(nativeTransport);
     }
     
-    public SendResult produce(MediaStreamTrack track, RtpParameters.Encoding[] encodings, String codecOptions, String codec) {
+    public SendResult produce(MediaStreamTrack track, List<RtpParameters.Encoding> encodings, String codecOptions, String codec) {
         if (encodings == null) {
-            encodings = new RtpParameters.Encoding[0];
+            encodings = new ArrayList<RtpParameters.Encoding>();
         }
         if (codecOptions == null) {
             codecOptions = "{}";
@@ -36,7 +39,7 @@ public class SendTransport extends Transport {
 
     private static native SendResult nativeProduce(long nativeTransport,
                                              MediaStreamTrack track,
-                                             RtpParameters.Encoding[] encodings,
+                                             List<RtpParameters.Encoding> encodings,
                                              String codecOptions,
                                              String codec);
 }

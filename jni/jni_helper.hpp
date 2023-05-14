@@ -11,8 +11,11 @@
 #define  LOG(fmt, ...)  __android_log_print(ANDROID_LOG_INFO,"beetle",\
                                             "file:%s, line:%d " fmt, __FILE__, __LINE__, \
                                               ##__VA_ARGS__)
+#define LOG_NO_FILE_LINE(fmt, ...) __android_log_print(ANDROID_LOG_INFO,"beetle",\
+                                            fmt, ##__VA_ARGS__)
 #else
 #define  LOG(...)  do {} while (0)
+#define LOG_NO_FILE_LINE(...) do {} while (0)
 #endif
 
 
