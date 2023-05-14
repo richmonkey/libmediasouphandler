@@ -69,8 +69,7 @@ public:
     }
     
     void OnConnectionStateChange(mediasoupclient::Transport* transport,
-                                         const std::string& connectionState) override {
-    }
+                                         const std::string& connectionState) override;
 };
 
 /*

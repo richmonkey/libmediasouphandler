@@ -13,7 +13,7 @@ class AndroidLog : public mediasoupclient::Logger::LogHandlerInterface {
 
 JOWW(void, MediaSoupClient_initialize)(JNIEnv *env, jclass cls) {
     mediasoupclient::Logger::SetHandler(new AndroidLog());
-    mediasoupclient::Logger::SetLogLevel(mediasoupclient::Logger::LogLevel::LOG_TRACE);
+    mediasoupclient::Logger::SetLogLevel(mediasoupclient::Logger::LogLevel::LOG_DEBUG);
 }
 
 

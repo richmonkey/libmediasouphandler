@@ -93,6 +93,8 @@ namespace mediasoupclient
 using Logger = mediasoupclient::Logger;
 
 #define MSC_LOG_FILE_LINE
+#define MSC_LOG_TRACE
+
 #define _MSC_LOG_SEPARATOR_CHAR "\n"
 
 #ifdef MSC_LOG_FILE_LINE

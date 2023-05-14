@@ -12,9 +12,9 @@ public class RecvTransport extends Transport {
 
         public RecvResult(String localId, RtpReceiver rtpReceiver, long nativeTrack) {
             try {
-                Method method = MediaStreamTrack.class.getDeclaredMethod("createMediaStreamTrack", long.class, MediaStreamTrack.class);
+                Method method = MediaStreamTrack.class.getDeclaredMethod("createMediaStreamTrack", long.class);
                 method.setAccessible(true);
-                this.track = (MediaStreamTrack)method.invoke(MediaStreamTrack.class, nativeTrack);
+                this.track = (MediaStreamTrack)method.invoke(null, nativeTrack);
                 this.localId = localId;
                 this.rtpReceiver = rtpReceiver;
             } catch (NoSuchMethodException e) {
