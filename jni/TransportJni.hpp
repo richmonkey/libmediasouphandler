@@ -59,18 +59,7 @@ public:
 };
 */    
 
-class TransportObserverJni: public mediasoupclient::Transport::Listener {
-public:
-    std::future<void> OnConnect(mediasoupclient::Transport* transport,
-                                        const nlohmann::json& dtlsParameters) override {
-        std::promise<void> promise;                                    
-        promise.set_value();
-        return promise.get_future();
-    }
-    
-    void OnConnectionStateChange(mediasoupclient::Transport* transport,
-                                         const std::string& connectionState) override;
-};
+
 
 /*
 class TransportObserverJni {

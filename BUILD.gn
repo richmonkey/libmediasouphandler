@@ -41,7 +41,17 @@ rtc_library("mediasoupclient") {
 
   include_dirs = [ "include", "deps/libsdptransform/include"  ]
 
-  suppressed_configs += [ "//build/config/compiler:no_exceptions" ]  
+  cflags = [ 
+    "-Wno-error=exit-time-destructors", 
+    "-Wno-error=deprecated-declarations", 
+    "-Wno-error=global-constructors",
+    "-Wno-error=unused-result",
+    "-Wno-error=c++98-compat-extra-semi",
+  ]
+
+  suppressed_configs += [ 
+      "//build/config/compiler:no_exceptions", 
+  ]  
 
   deps = [
       "//libmediasoupclient/deps/libsdptransform",
@@ -69,6 +79,48 @@ rtc_library("mediasoupclient") {
   ]
 }
 
+if (is_ios) {
+    rtc_library("mediasoup_client_objc") {
+        visibility = [ "*" ]
+
+        allow_poison = [
+          "audio_codecs",  # TODO(bugs.webrtc.org/8396): Remove.
+          "default_task_queue",
+        ]
+
+        sources = [
+          "objc/MSClient.h",
+          "objc/MSClient.mm",
+          "objc/MSDevice.h",
+          "objc/MSDevice.mm",
+          "objc/MSTransport.h",
+          "objc/MSTransport+Private.h",
+          "objc/MSTransport.mm",
+          "objc/MSSendTransport.h",
+          "objc/MSSendTransport+Private.h",
+          "objc/MSSendTransport.mm",
+          "objc/MSRecvTransport.h",
+          "objc/MSRecvTransport+Private.h",
+          "objc/MSRecvTransport.mm",
+        ]
+
+        configs += [
+          "//:common_objc",
+        ]
+        public_configs = [ "//sdk:common_config_objc" ]
+        include_dirs = [ "include", "deps/libsdptransform/include", "//sdk/objc/api/peerconnection"  ] 
+
+        suppressed_configs += [ 
+            "//build/config/compiler:no_exceptions", 
+        ]  
+
+        deps = [
+          ":mediasoupclient",
+          "//sdk:base_objc",
+          "//sdk:peerconnectionfactory_base_objc",
+        ]
+    }
+}
 
 if (is_android) {
     rtc_android_library("mediasoup_client_java") {

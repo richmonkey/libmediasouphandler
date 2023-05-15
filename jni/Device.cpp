@@ -23,6 +23,22 @@
 //     return reinterpret_cast<webrtc::jni::OwnedFactoryAndThreads*>(j_p)->factory();
 // }
 
+class TransportObserverJni: public mediasoupclient::Transport::Listener {
+public:
+    std::future<void> OnConnect(mediasoupclient::Transport* transport,
+                                        const nlohmann::json& dtlsParameters) override {
+        std::promise<void> promise;                                    
+        promise.set_value();
+        return promise.get_future();
+    }
+    
+    void OnConnectionStateChange(mediasoupclient::Transport* transport,
+                                         const std::string& connectionState) override {
+        LOG("transport:%s connection status:%s", transport->GetId().c_str(), connectionState.c_str());
+    }
+};
+
+
 static jobject Java_SendTransport_Constructor(JNIEnv *env, jlong nativeTransport) {
     jclass cls = env->FindClass("org/mediasoup/SendTransport");
     auto constructor = env->GetMethodID(cls, "<init>", "(J)V");

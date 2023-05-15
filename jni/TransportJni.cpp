@@ -1,18 +1,14 @@
-#include "libmediasoupclient/jni/TransportJni.hpp"
 #include <android/log.h>
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/pc/rtp_parameters.h"
 #include "sdk/android/src/jni/pc/rtp_sender.h"
 #include "sdk/android/src/jni/pc/rtp_receiver.h"
+#include "libmediasoupclient/include/Transport.hpp"
 #include "libmediasoupclient/include/Device.hpp"
 #include "libmediasoupclient/include/Transport.hpp"
 #include "libmediasoupclient/jni/jni_helper.hpp"
 #include <json.hpp>
 
-void TransportObserverJni::OnConnectionStateChange(mediasoupclient::Transport* transport,
-                                         const std::string& connectionState) {
-    LOG("transport:%s connection status:%s", transport->GetId().c_str(), connectionState.c_str());
-}
 
 static jlong getNativeTrack(JNIEnv *env, jobject j_track) {
     jclass cls = env->GetObjectClass(j_track);
@@ -171,21 +167,20 @@ JOWW(jobject, SendTransport_nativeProduce)(
     webrtc::MediaStreamTrackInterface *track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(nativeTrack);
     auto encodings = webrtc::JavaListToNativeVector<webrtc::RtpEncodingParameters, jobject>(env, webrtc::JavaParamRef<jobject>(j_encodings), 
         &webrtc::jni::JavaToNativeRtpEncodingParameters);
-    auto s_codecOptions = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codecOptions));
-
-    auto codecOptions = nlohmann::json::parse(s_codecOptions);
-
+    nlohmann::json codecOptions;
+    if (s_codecOptions != nullptr) {
+        auto s_codecOptions = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codecOptions));
+        codecOptions = nlohmann::json::parse(s_codecOptions);
+    }
     nlohmann::json codec;
-    nlohmann::json *pcodec;
     if (j_codec != nullptr) {
         auto s_codec = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codec));
         codec = nlohmann::json::parse(s_codec);
-        pcodec = &codec;
-    } else {
-        pcodec = nullptr;
     }
 
-    auto sendResult = transport->Produce(track, &encodings, &codecOptions, pcodec);
+    auto sendResult = transport->Produce(track, &encodings, 
+        codecOptions.empty() ? nullptr : &codecOptions, codec.empty() ? nullptr : &codec);
+
     auto localId = webrtc::NativeToJavaString(env, sendResult.localId);
     auto rtpParameters = webrtc::NativeToJavaString(env, sendResult.rtpParameters.dump());
     auto rtpSender = webrtc::jni::NativeToJavaRtpSender(env, sendResult.rtpSender);
