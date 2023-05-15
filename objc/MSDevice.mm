@@ -43,6 +43,9 @@ public:
     return self;
 }
 
+
+
+
 -(BOOL)loaded {
     return _device->IsLoaded();
 }
@@ -53,6 +56,11 @@ public:
 
 -(NSString*)sctpCapabilities {
     return [NSString stringWithUTF8String:_device->GetSctpCapabilities().dump().c_str()];
+}
+
+-(void)load:(NSString*)routerRtpCapabilities rtcConfig:(RTC_OBJC_TYPE(RTCConfiguration) *)rtcConfig 
+        factory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory {
+
 }
 
 -(BOOL)canProduce:(NSString*)kind {

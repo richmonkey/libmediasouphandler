@@ -20,6 +20,11 @@ rtc_library("sdptransform") {
     "include/json.hpp",
   ]
 
+  cflags = [ 
+    "-Wno-error=exit-time-destructors", 
+    "-Wno-error=global-constructors",
+  ]
+
   include_dirs = [ "include" ]
   deps = [
    

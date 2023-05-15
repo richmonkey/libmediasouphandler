@@ -8,6 +8,6 @@
 
 @interface MSTransport : NSObject
 
-@property(nonatomic) MSFingerprint *fingerprint;
+@property(nonatomic, readonly) MSFingerprint *fingerprint;
 
 @end

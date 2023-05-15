@@ -47,6 +47,7 @@ rtc_library("mediasoupclient") {
     "-Wno-error=global-constructors",
     "-Wno-error=unused-result",
     "-Wno-error=c++98-compat-extra-semi",
+    "-Wno-error=sign-compare",
   ]
 
   suppressed_configs += [ 
