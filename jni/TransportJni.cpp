@@ -168,7 +168,7 @@ JOWW(jobject, SendTransport_nativeProduce)(
     auto encodings = webrtc::JavaListToNativeVector<webrtc::RtpEncodingParameters, jobject>(env, webrtc::JavaParamRef<jobject>(j_encodings), 
         &webrtc::jni::JavaToNativeRtpEncodingParameters);
     nlohmann::json codecOptions;
-    if (s_codecOptions != nullptr) {
+    if (j_codecOptions != nullptr) {
         auto s_codecOptions = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_codecOptions));
         codecOptions = nlohmann::json::parse(s_codecOptions);
     }
