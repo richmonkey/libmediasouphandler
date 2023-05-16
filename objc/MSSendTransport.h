@@ -7,6 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+RTC_OBJC_EXPORT 
 @interface MSSendResult : NSObject
 @property(nonatomic, copy) NSString *localId;
 @property(nonatomic, copy) NSString *rtpParameters;
@@ -14,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(instancetype)initWithLocalId:(NSString*)localId rtpParameters:(NSString*)rtpParameters rtpSender:(RTC_OBJC_TYPE(RTCRtpSender) *)rtpSender;
 @end
 
+RTC_OBJC_EXPORT 
 @interface MSSendTransport : MSTransport
 
 -(MSSendResult*)produce:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track 

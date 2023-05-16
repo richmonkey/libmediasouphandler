@@ -25,12 +25,17 @@ class IosLogHandler : public mediasoupclient::Logger::LogHandlerInterface {
 };
 
 
-@implementation MSClient
+
+@implementation MSClient {
+
+}
 
 +(void)initialize {
-    mediasoupclient::Logger::SetHandler(new IosLogHandler());
-    mediasoupclient::Logger::SetLogLevel(mediasoupclient::Logger::LogLevel::LOG_DEBUG);
-    NSLog(@"MSClient initialize");
+    if (self == [MSClient self]) {
+        mediasoupclient::Logger::SetHandler(new IosLogHandler());
+        mediasoupclient::Logger::SetLogLevel(mediasoupclient::Logger::LogLevel::LOG_DEBUG);
+        NSLog(@"MSClient initialize");
+    }
 }
 
 +(void)cleanup {
@@ -41,5 +46,6 @@ class IosLogHandler : public mediasoupclient::Logger::LogHandlerInterface {
     std::string version = mediasoupclient::Version();
     return [NSString stringWithUTF8String:version.c_str()];
 }
+
 
 @end

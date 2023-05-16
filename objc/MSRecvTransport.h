@@ -3,6 +3,7 @@
 #import "RTCMediaStreamTrack.h"
 #import "RTCRtpReceiver.h"
 
+RTC_OBJC_EXPORT 
 @interface MSRecvResult : NSObject
 @property(nonatomic, copy) NSString *localId;
 @property(nonatomic) RTC_OBJC_TYPE(RTCMediaStreamTrack) *track;
@@ -12,6 +13,7 @@
 
 @end
 
+RTC_OBJC_EXPORT 
 @interface MSRecvTransport : MSTransport
 
 -(MSRecvResult*)consume:(NSString*)id 

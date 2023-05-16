@@ -7,6 +7,7 @@
 @class RTC_OBJC_TYPE(RTCConfiguration);
 @class RTC_OBJC_TYPE(RTCPeerConnectionFactory);
 
+RTC_OBJC_EXPORT
 @interface MSDevice : NSObject
 
 @property(nonatomic, readonly) BOOL loaded;
