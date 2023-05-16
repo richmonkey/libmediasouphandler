@@ -51,4 +51,12 @@
     return result;
 }
 
+-(void)closeConsumer:(NSString*)localId {
+    self.recvTransport->CloseConsumer([localId UTF8String]);
+}
+
+-(NSString*)GetConsumerStats:(NSString*)localId {
+    auto stats = self.recvTransport->GetConsumerStats([localId UTF8String]);
+    return [NSString stringWithUTF8String:stats.dump().c_str()];
+}
 @end

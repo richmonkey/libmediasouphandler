@@ -23,6 +23,10 @@ RTC_OBJC_EXPORT
   codecOptions:(nullable NSString*)codecOptions 
          codec:(nullable NSString*)codec;
 
+-(void)closeProducer:(NSString*)localId;
+-(void)replaceTrack:(NSString*)localId track:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track;
+-(NSString*)getProducerStats:(NSString*)localId;
+-(void)setMaxSpatialLayer:(NSString*)localId maxSpatialLayer:(int)maxSpatialLayer;
 @end
 
 NS_ASSUME_NONNULL_END

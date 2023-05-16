@@ -44,12 +44,12 @@
     }
 
     nlohmann::json codecOptionsJson;
-    if (!codecOptions) {
+    if (codecOptions) {
         codecOptionsJson = nlohmann::json::parse([codecOptions UTF8String]);
     }
 
     nlohmann::json codecJson;
-    if (!codec) {
+    if (codec) {
         codecJson = nlohmann::json::parse([codec UTF8String]);
     }
 
@@ -63,4 +63,20 @@
     return result;
 }
 
+-(void)closeProducer:(NSString*)localId {
+    self.sendTransport->CloseProducer([localId UTF8String]);
+}
+
+-(void)replaceTrack:(NSString*)localId track:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track {
+    self.sendTransport->ReplaceTrack([localId UTF8String], track.nativeTrack.get());
+}
+
+-(NSString*)getProducerStats:(NSString*)localId {
+    auto stats = self.sendTransport->GetProducerStats([localId UTF8String]);
+    return [NSString stringWithUTF8String:stats.dump().c_str()];
+}
+
+-(void)setMaxSpatialLayer:(NSString*)localId maxSpatialLayer:(int)maxSpatialLayer {
+    self.sendTransport->SetMaxSpatialLayer([localId UTF8String], maxSpatialLayer);
+}
 @end

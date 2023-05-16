@@ -38,13 +38,14 @@ public:
 -(instancetype)init {
     self = [super init];
     if (self) {
-
+        _device = new mediasoupclient::Device();
     }
     return self;
 }
 
-
-
+-(void)dealloc {
+    delete _device;
+}
 
 -(BOOL)loaded {
     return _device->IsLoaded();
@@ -60,7 +61,13 @@ public:
 
 -(void)load:(NSString*)routerRtpCapabilities rtcConfig:(RTC_OBJC_TYPE(RTCConfiguration) *)rtcConfig 
         factory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory {
+    auto routerRtpCapabilitiesJson = nlohmann::json::parse([routerRtpCapabilities UTF8String]);
+    std::unique_ptr<webrtc::PeerConnectionInterface::RTCConfiguration> p_rtpConfig([rtcConfig createNativeConfiguration]);
+    mediasoupclient::PeerConnection::Options options; 
+    options.config = *p_rtpConfig;
+    options.factory = factory.nativeFactory.get();
 
+    _device->Load(routerRtpCapabilitiesJson, &options);
 }
 
 -(BOOL)canProduce:(NSString*)kind {

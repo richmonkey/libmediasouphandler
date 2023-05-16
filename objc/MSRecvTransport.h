@@ -21,4 +21,6 @@ RTC_OBJC_EXPORT
                  kind:(NSString*)kind 
         rtpParameters:(NSString*)rtpParameters;
 
+-(void)closeConsumer:(NSString*)localId;
+-(NSString*)GetConsumerStats:(NSString*)localId;
 @end

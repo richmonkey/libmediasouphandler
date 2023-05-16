@@ -34,6 +34,11 @@
 }
 
 
+-(NSString*)transportId {
+    std::string _id = _transport->GetId();
+    return [NSString stringWithUTF8String:_id.c_str()];
+}
+
 -(mediasoupclient::Transport*)nativeTransport {
     return _transport;
 }
@@ -43,6 +48,21 @@
     std::string fingerprint;
     self.nativeTransport->GetFingerprint(algorithm, fingerprint);
     return [[MSFingerprint alloc] initWithAlgorithm:[NSString stringWithUTF8String:algorithm.c_str()] fingerprint:[NSString stringWithUTF8String:fingerprint.c_str()]];
+}
+
+-(void)close {
+    _transport->Close();
+}
+
+-(NSString*)getStats {
+    auto stats = _transport->GetStats();
+    auto statsDump = stats.dump();
+    return [NSString stringWithUTF8String:statsDump.c_str()];
+}
+
+-(void)restartIce:(NSString*)iceParameters {
+    auto iceParametersJson = nlohmann::json::parse([iceParameters UTF8String]);
+    _transport->RestartIce(iceParametersJson);
 }
 
 @end

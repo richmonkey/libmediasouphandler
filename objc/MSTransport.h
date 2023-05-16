@@ -11,6 +11,11 @@ RTC_OBJC_EXPORT
 RTC_OBJC_EXPORT 
 @interface MSTransport : NSObject
 
+@property(nonatomic, readonly) NSString *transportId;
 @property(nonatomic, readonly) MSFingerprint *fingerprint;
+
+-(void)close;
+-(NSString*)getStats;
+-(void)restartIce:(NSString*)iceParameters;
 
 @end
