@@ -5,11 +5,12 @@ MeidaSoup client for ios&android.
 
 # Compile
 
-* Fetch webrtc and build it for ios or android
-* Put this repo into webrtc src directory.
+* Fetch webrtc and build it for ios or android.
+* Put this repo into webrtc src directory and rename it as libmediasoupclient.
 * Apply a patch to webrtc src to change BUILD.gn.
-  In the webrtc src directory, checkout M113 (commit id:f6ab0b438e22ea30db7ad3fbf9f870b0d4506235), git apply libmediasoupclient/build.patch
-* Build webrtc again, the webrtc library contains the api for mediasoup.
+
+  git apply libmediasoupclient/build.patch in the webrtc src directory, the patch depends on  M113 (commit id:f6ab0b438e22ea30db7ad3fbf9f870b0d4506235), 
+* Build webrtc again, the webrtc library contains the mediasoup client.
 
 
 # Android API
@@ -169,29 +170,3 @@ NSDictionary *data = @{@"transportId":transport.transportId, @"dtlsParameters":d
 
 ```
 
-## Website and Documentation
-
-* [mediasoup.org][mediasoup-website]
-
-
-## Support Forum
-
-* [mediasoup.discourse.group][mediasoup-discourse]
-
-
-## Authors
-
-* José Luis Millán [[website](https://jssip.net)|[github](https://github.com/jmillan/)]
-* Iñaki Baz Castillo [[website](https://inakibaz.me)|[github](https://github.com/ibc/)]
-
-
-
-## License
-
-[ISC](./LICENSE)
-
-
-
-
-[mediasoup-website]: https://mediasoup.org
-[mediasoup-discourse]: https://mediasoup.discourse.group
