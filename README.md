@@ -8,6 +8,7 @@ MeidaSoup client for ios&android.
 * Fetch webrtc and build it for ios or android
 * Put this repo into webrtc src directory.
 * Apply a patch to webrtc src to change BUILD.gn.
+  In the webrtc src directory, checkout branch-heads/5672(commit id:f6ab0b438e22ea30db7ad3fbf9f870b0d4506235), git apply libmediasoupclient/build.patch
 * Build webrtc again, the webrtc library contains the api for mediasoup.
 
 

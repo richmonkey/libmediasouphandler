@@ -1,0 +1,44 @@
+diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
+index 971a323ef5..ab65255370 100644
+--- a/sdk/BUILD.gn
++++ b/sdk/BUILD.gn
+@@ -1341,6 +1341,11 @@ if (is_ios || is_mac) {
+           "objc/api/video_codec/RTCVideoEncoderAV1.h",
+           "objc/api/video_frame_buffer/RTCNativeI420Buffer.h",
+           "objc/api/video_frame_buffer/RTCNativeMutableI420Buffer.h",
++          "//libmediasoupclient/objc/MSClient.h",          
++          "//libmediasoupclient/objc/MSDevice.h",
++          "//libmediasoupclient/objc/MSRecvTransport.h",
++          "//libmediasoupclient/objc/MSSendTransport.h",
++          "//libmediasoupclient/objc/MSTransport.h",          
+         ]
+ 
+         if (!build_with_chromium) {
+@@ -1370,6 +1375,7 @@ if (is_ios || is_mac) {
+           ":videocapture_objc",
+           ":videocodec_objc",
+           ":videotoolbox_objc",
++          "//libmediasoupclient:mediasoup_client_objc",
+         ]
+         if (rtc_ios_macos_use_opengl_rendering) {
+           deps += [ ":opengl_ui_objc" ]
+diff --git a/sdk/android/BUILD.gn b/sdk/android/BUILD.gn
+index b3abdc772e..e9810e8e4b 100644
+--- a/sdk/android/BUILD.gn
++++ b/sdk/android/BUILD.gn
+@@ -57,6 +57,7 @@ if (is_android) {
+       ":video_java",
+       "../../modules/audio_device:audio_device_java",
+       "../../rtc_base:base_java",
++      "//libmediasoupclient:mediasoup_client_java",
+     ]
+   }
+ 
+@@ -141,6 +142,7 @@ if (is_android) {
+       ":video_egl_jni",
+       "../../pc:libjingle_peerconnection",
+       "../../rtc_base:ssl",
++      "//libmediasoupclient:mediasoup_client_jni",
+     ]
+     output_extension = "so"
+   }
