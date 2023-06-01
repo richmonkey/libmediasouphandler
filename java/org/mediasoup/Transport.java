@@ -26,8 +26,19 @@ public class Transport {
         return nativeGetFingerprint(nativeTransport);
     }
 
+    public String getStats() {
+        return nativeGetStats(nativeTransport);
+    }
+
+    public void restartIce(String iceParameters) {
+        nativeRestartIce(nativeTransport, iceParameters);
+    }
+
     private static native String nativeGetId(long nativeTransport);
     private static native void nativeClose(long nativeTransport);
     private static native boolean nativeIsClosed(long nativeTransport);        
     private static native Fingerprint nativeGetFingerprint(long nativeTransport);
+    private static native String nativeGetStats(long nativeTransport);
+    private static native void nativeRestartIce(long nativeTransport, String iceParameters);
+    private static native void nativeUpdateIceServers(long nativeTransport, String iceServers);
 }

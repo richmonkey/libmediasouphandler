@@ -38,21 +38,6 @@ static jobject Java_RecvTransport_RecvResult_Constructor(JNIEnv* env, jstring lo
     return object;
 }
 
-// static jobject createMediaStreamTrack(JNIEnv* env, jlong nativeTrack) {
-//     jclass cls = env->FindClass("org/mediasoup/Recvransport$RecvResult");
-// }
-
-//Transport
-// JOWW(void, Transport_nativeClose)(JNIEnv *env, jlong nativeTransport) {
-//     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
-//     transport->Close();
-// }
-
-// JOWW(jboolean, Transport_nativeIsClosed)(JNIEnv *env, jlong nativeTransport) {
-//     mediasoupclient::Transport *transport = reinterpret_cast<mediasoupclient::Transport*>(nativeTransport);
-//     return transport->IsClosed();
-// }
-
     
 JOWW(jstring, Transport_nativeGetId)(JNIEnv *env, jclass cls,
                                      jlong nativeTransport) {
@@ -130,30 +115,6 @@ JOWW(void, Transport_nativeUpdateIceServers)(JNIEnv *env, jclass cls,
 
 
 //SendTransport
-// JOWW(jlong, SendTransport_nativeProduce)(JNIEnv *env, jobject object,
-//                                         jlong nativeTransport,
-//                                         jobject j_producer,
-//                                         jobject j_listener,
-//                                         jlong nativeTrack,
-//                                         jobjectArray j_encodings) {
-//     TransportJni *jni_transport = reinterpret_cast<TransportJni*>(nativeTransport);
-//     ProducerListenerJni *listener = new ProducerListenerJni(env, j_listener, j_producer);
-//     webrtc::MediaStreamTrackInterface *track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(nativeTrack);
-
-//     std::vector<webrtc::RtpEncodingParameters> encodings;
-//     int len = env->GetArrayLength(j_encodings);
-//     for (int i = 0; i < len; i++) {
-//         jobject e = env->GetObjectArrayElement(j_encodings, i);
-//         webrtc::ScopedJavaLocalRef<jobject> j_encoding = webrtc::ScopedJavaLocalRef<jobject>(env, e);
-//         auto parameters = webrtc::jni::JavaToNativeRtpEncodingParameters(env, j_encoding);
-//         encodings.push_back(parameters);
-//     }
-        
-//     auto producer = jni_transport->send_transport->Produce(listener, track, &encodings, NULL);
-    
-//     return webrtc::NativeToJavaPointer(new ProducerJni(producer, listener));
-// }
-
 JOWW(jobject, SendTransport_nativeProduce)(
     JNIEnv *env, 
     jclass cls,
@@ -188,7 +149,48 @@ JOWW(jobject, SendTransport_nativeProduce)(
 }
 
 
-    
+JOWW(void, SendTransport_nativeCloseProducer)(JNIEnv *env, jclass cls, jlong nativeTransport, jstring j_localId) {
+    mediasoupclient::SendTransport *transport = reinterpret_cast<mediasoupclient::SendTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));
+    transport->CloseProducer(localId);
+}
+
+JOWW(void, SendTransport_nativeReplaceTrack)(
+    JNIEnv *env, 
+    jclass cls, 
+    jlong nativeTransport, 
+    jstring j_localId, 
+    jobject j_track) {
+    mediasoupclient::SendTransport *transport = reinterpret_cast<mediasoupclient::SendTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));        
+    jlong nativeTrack = getNativeTrack(env, j_track);
+    webrtc::MediaStreamTrackInterface *track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(nativeTrack);    
+    transport->ReplaceTrack(localId, track);
+}
+
+JOWW(void, SendTransport_nativeSetMaxSpatialLayer)(
+    JNIEnv *env, 
+    jclass cls, 
+    jlong nativeTransport, 
+    jstring j_localId, 
+    jint maxSpatialLayer) {
+    mediasoupclient::SendTransport *transport = reinterpret_cast<mediasoupclient::SendTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));        
+    transport->SetMaxSpatialLayer(localId, maxSpatialLayer);
+}
+
+JOWW(jstring, SendTransport_nativeGetProducerStats)(
+    JNIEnv *env, 
+    jclass cls, 
+    jlong nativeTransport, 
+    jstring j_localId, 
+    jint maxSpatialLayer) {
+    mediasoupclient::SendTransport *transport = reinterpret_cast<mediasoupclient::SendTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));        
+    auto stats = transport->GetProducerStats(localId);
+    auto result = webrtc::NativeToJavaString(env, stats.dump());
+    return result.Release();    
+}
     
 //RecvTransport
 JOWW(jobject, RecvTransport_nativeConsume)(JNIEnv *env,
@@ -216,244 +218,27 @@ JOWW(jobject, RecvTransport_nativeConsume)(JNIEnv *env,
     return Java_RecvTransport_RecvResult_Constructor(env, localId.Release(), rtpReceiver.Release(), nativeTrack);
 }
 
+JOWW(void, RecvTransport_nativeCloseConsumer)(
+    JNIEnv *env,
+    jclass cls,
+    jlong nativeTransport,
+    jstring j_localId) {
+    mediasoupclient::RecvTransport* transport = reinterpret_cast<mediasoupclient::RecvTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));    
 
+    transport->CloseConsumer(localId);
+}
 
-//Producer begin
+JOWW(jstring, RecvTransport_nativeGetConsumerStats)(
+    JNIEnv *env,
+    jclass cls,
+    jlong nativeTransport,
+    jstring j_localId) {
+    mediasoupclient::RecvTransport* transport = reinterpret_cast<mediasoupclient::RecvTransport*>(nativeTransport);
+    auto localId = webrtc::JavaToNativeString(env, webrtc::JavaParamRef<jstring>(j_localId));    
 
-// JOWW(jstring, Producer_nativeGetId)(JNIEnv *env, jobject object,
-//                                  jlong nativeProducer) {
+    auto stats = transport->GetConsumerStats(localId);
+    auto result = webrtc::NativeToJavaString(env, stats.dump());
+    return result.Release();   
+}
 
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto id = producer->producer->GetId();
-//     auto result = webrtc::NativeToJavaString(env, id);
-//     return result.Release();
-// }
-                                 
-// JOWW(jstring, Producer_nativeGetKind)(JNIEnv *env, jobject object,
-//                                  jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto kind = producer->producer->GetKind();
-//     auto result =  webrtc::NativeToJavaString(env, kind);
-//     return result.Release();    
-// }
-
-
-// JOWW(void, Producer_nativeGetTrack)(JNIEnv *env, jobject object,
-//                                  jlong nativeProducer) {
-//     LOG("not implement");
-// }
-
-
-// JOWW(jstring, Producer_nativeGetRtpParameters)(JNIEnv *env, jobject object,
-//                                                jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto rtpParameters = producer->producer->GetRtpParameters();
-//     auto result =  webrtc::NativeToJavaString(env, rtpParameters.dump());
-//     return result.Release();        
-// }
-
-
-// JOWW(jint, Producer_nativeGetMaxSpatialLayer)(JNIEnv *env, jobject object,
-//                                             jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto maxSpatialLayer = producer->producer->GetMaxSpatialLayer();
-//     return maxSpatialLayer;
-// }
-
-
-// JOWW(jstring, Producer_nativeGetStats)(JNIEnv *env, jobject object,
-//                                             jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto stats = producer->producer->GetStats();
-//     auto result =  webrtc::NativeToJavaString(env, stats.dump());
-//     return result.Release();      
-// }
-
-// JOWW(jstring, Producer_nativeGetAppData)(JNIEnv *env, jobject object,
-//                                       jlong nativeProducer) {
-//     return NULL;
-// }
-
-
-// JOWW(jboolean, Producer_nativeIsClosed)(JNIEnv *env, jobject object,
-//                                     jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto closed = producer->producer->IsClosed();
-//     return closed ? JNI_TRUE : JNI_FALSE;
-// }
-
-
-// JOWW(jboolean, Producer_nativeIsPaused)(JNIEnv *env, jobject object,
-//                                     jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     auto paused = producer->producer->IsPaused();
-//     return paused ? JNI_TRUE : JNI_FALSE;    
-// }
-
-
-
-// JOWW(void, Producer_nativeClose)(JNIEnv *env, jobject object,
-//                                     jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     producer->producer->Close();
-//     delete producer;
-// }
-
-
-// JOWW(void, Producer_nativePause)(JNIEnv *env, jobject object,
-//                                     jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     producer->producer->Pause();        
-// }
-
-
-// JOWW(void, Producer_nativeResume)(JNIEnv *env, jobject object,
-//                                     jlong nativeProducer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     producer->producer->Resume();            
-// }
-
-
-// JOWW(void, Producer_nativeReplaceTrack)(JNIEnv *env, jobject object,
-//                                         jlong nativeProducer,
-//                                         jlong nativeTrack) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     LOG("not implement");
-// }
-
-
-// JOWW(void, Producer_nativeSetMaxSpatialLayer)(JNIEnv *env, jobject object,
-//                                               jlong nativeProducer,
-//                                               jint spatialLayer) {
-//     ProducerJni *producer = reinterpret_cast<ProducerJni*>(nativeProducer);
-//     producer->producer->SetMaxSpatialLayer(spatialLayer);
-// }
-
-
-//Consumer
-
-// JOWW(jstring, Consumer_nativeGetId)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     auto id = consumer->consumer->GetId();
-//     auto result = webrtc::NativeToJavaString(env, id);
-//     return result.Release();    
-// }
-
-
-// JOWW(jstring, Consumer_nativeGetProducerId)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     auto producerId = consumer->consumer->GetProducerId();
-//     auto result = webrtc::NativeToJavaString(env, producerId);
-//     return result.Release();    
-// }
-
-
-// JOWW(jstring, Consumer_nativeGetKind)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     auto kind = consumer->consumer->GetKind();
-//     auto result = webrtc::NativeToJavaString(env, kind);
-//     return result.Release();        
-// }
-
-// JOWW(jstring, Consumer_nativeGetRtpParameters)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);    
-//     auto rtpParameters = consumer->consumer->GetRtpParameters();
-//     auto result =  webrtc::NativeToJavaString(env, rtpParameters.dump());
-//     return result.Release();            
-// }
-
-
-// JOWW(void, Consumer_nativeGetTrack)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     LOG("not implement");
-// }
-
-
-
-// JOWW(jstring, Consumer_nativeGetStats)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     auto stats = consumer->consumer->GetStats();
-//     auto result = webrtc::NativeToJavaString(env, stats.dump());
-//     return result.Release();          
-// }
-
-
-
-// JOWW(jstring, Consumer_nativeGetAppData)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     return nullptr;
-// }
-
-
-// JOWW(jboolean, Consumer_nativeIsClosed)(JNIEnv *env, jobject object,
-//                                        jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     bool closed = consumer->consumer->IsClosed();
-//     return closed ? JNI_TRUE : JNI_FALSE;
-// }
-
-// JOWW(jboolean, Consumer_nativeIsPaused)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     bool paused = consumer->consumer->IsPaused();
-//     return paused ? JNI_TRUE : JNI_FALSE;    
-// }
-
-
-// JOWW(void, Consumer_nativeClose)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     consumer->consumer->Close();
-//     delete consumer;
-// }
-
-
-// JOWW(void, Consumer_nativePause)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     consumer->consumer->Pause();
-// }
-
-// JOWW(void, Consumer_nativeResume)(JNIEnv *env, jobject object,
-//                                     jlong nativeConsumer) {
-//     ConsumerJni *consumer = reinterpret_cast<ConsumerJni*>(nativeConsumer);
-//     consumer->consumer->Resume();    
-// }
-
-
-// //called in other thread
-// JOWW(void, Callback_nativeCall)(JNIEnv *env, jobject object,
-//                                    jlong nativeCallback, jstring value) {
-
-//     if (value != NULL) {
-//         CallbackStdString *cb = reinterpret_cast<CallbackStdString*>(nativeCallback);
-//         auto v = webrtc::JavaToStdString(env, value);
-//         cb->Call(v);
-//         delete cb;
-//     } else {
-//         CallbackVoid *cb = reinterpret_cast<CallbackVoid*>(nativeCallback);
-//         cb->Call();
-//         delete cb;        
-//     }
-// }
-
-
-// //called in other thread
-// JOWW(void, Callback_nativeCallException)(JNIEnv *env, jobject object,
-//                                    jlong nativeCallback, jstring value) {
-//     CallbackInterface *cb = reinterpret_cast<CallbackInterface*>(nativeCallback);    
-//     auto v = webrtc::JavaToStdString(env, value);
-//     cb->CallException(v);
-//     delete cb;
-// }

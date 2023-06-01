@@ -426,19 +426,6 @@ namespace mediasoupclient
 		// May throw.
 		auto recvResult = this->recvHandler->Receive(id, kind, rtpParameters);
 
-        /*		auto* consumer = new Consumer(
-		  this,
-		  consumerListener,
-		  id,
-		  recvResult.localId,
-		  producerId,
-		  recvResult.rtpReceiver,
-		  recvResult.track,
-		  *rtpParameters,
-		  appData);
-
-          this->consumers[consumer->GetId()] = consumer;*/
-
 		// If this is the first video Consumer and the Consumer for RTP probation
 		// has not yet been created, create it now.
 		if (!this->probatorConsumerCreated && kind == "video")
@@ -495,13 +482,6 @@ namespace mediasoupclient
 		auto recvResult = this->recvHandler->ReceiveDataChannel(label, dataChannelInit);
         
         return recvResult;
-        /*
-		auto dataConsumer = new DataConsumer(
-		  listener, this, id, producerId, recvResult.dataChannel, recvResult.sctpStreamParameters, appData);
-
-		this->dataConsumers[dataConsumer->GetId()] = dataConsumer;
-
-		return dataConsumer;*/
 	}
 
 	void RecvTransport::Close()

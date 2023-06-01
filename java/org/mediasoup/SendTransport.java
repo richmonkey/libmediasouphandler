@@ -34,11 +34,35 @@ public class SendTransport extends Transport {
         return sendResult;
     }
 
+    public void closeProducer(String localId) {
+        nativeCloseProducer(nativeTransport, localId);
+    }
+
+    public void replaceTrack(String localId, MediaStreamTrack track) {
+        nativeReplaceTrack(nativeTransport, localId, track);
+    }
+
+    public void setMaxSpatialLayer(String localId, int maxSpatialLayer) {
+        nativeSetMaxSpatialLayer(nativeTransport, localId, maxSpatialLayer);
+    }
+
+    public String getProducerStats(String localId) {
+        return nativeGetProducerStats(nativeTransport, localId);
+    }
+
     private static native SendResult nativeProduce(long nativeTransport,
                                              MediaStreamTrack track,
                                              List<RtpParameters.Encoding> encodings,
                                              String codecOptions,
                                              String codec);
+
+    private static native void nativeCloseProducer(long nativeTransport, String localId);
+
+    private static native void nativeReplaceTrack(long nativeTransport, String localId, MediaStreamTrack track);
+
+    private static native void nativeSetMaxSpatialLayer(long nativeTransport, String localId, int maxSpatialLayer);
+
+    private static native String nativeGetProducerStats(long nativeTransport, String localId);
 }
 
 

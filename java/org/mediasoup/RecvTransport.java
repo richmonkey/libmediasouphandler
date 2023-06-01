@@ -35,5 +35,15 @@ public class RecvTransport extends Transport {
         return nativeConsume(nativeTransport, id, producerId, kind, rtpParameters);
     }
 
+    public void closeConsumer(String localId) {
+        nativeCloseConsumer(nativeTransport, localId);
+    }
+
+    public String getConsumerStats(String localId) {
+        return nativeGetConsumerStats(nativeTransport, localId);
+    }
+
     private static native RecvResult nativeConsume(long nativeTransport, String id, String producerId, String kind, String rtpParameters);
+    private static native void nativeCloseConsumer(long nativeTransport, String localId);
+    private static native String nativeGetConsumerStats(long nativeTransport, String localId);
 }
